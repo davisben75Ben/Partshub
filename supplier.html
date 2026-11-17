@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PartsHub | Join the Supplier Network</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#eaf0f8;background:#0c1220}*{box-sizing:border-box}body{margin:0}header{padding:22px max(18px,calc((100vw - 1050px)/2));background:#111c30;border-bottom:1px solid #33465f}a{color:#ffc46b}h1{margin:0;font-size:28px}h2{font-size:21px;margin:0 0 12px}h3{margin:0 0 12px}.sub{color:#afbed2}.wrap{max-width:1050px;margin:auto;padding:22px 18px}.panel{background:#162238;border:1px solid #31445e;border-radius:15px;padding:22px;margin-bottom:18px}.banner{background:#302a25;border-left:4px solid #ffb33d;padding:13px;border-radius:6px;margin-bottom:20px}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.tabs button{width:auto;background:#243750;color:#fff}.tabs button.active{background:#ffb33d;color:#111}label{display:block;font-size:13px;color:#c1cede;margin:0 0 5px}input,select,textarea,button{font:inherit;width:100%;padding:12px;border-radius:9px;border:1px solid #455b78;background:#0e192b;color:#fff}button{background:#ffb33d;color:#171717;border:0;font-weight:750;cursor:pointer}button.secondary{background:#31445f;color:white}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.full{grid-column:1/-1}.field{min-width:0}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.actions button{width:auto}.hint{color:#afbed2;font-size:13px}.preview{display:flex;align-items:center;gap:15px;background:#101b2e;padding:12px;border-radius:10px}.preview img{width:76px;height:76px;object-fit:contain;border-radius:8px;background:white}.item{background:#0f1b2d;border:1px solid #344963;padding:12px;border-radius:10px;margin:9px 0}.item strong{color:#ffcc78}.hidden{display:none!important}.status{margin-top:12px;color:#b7efc6}footer{color:#a6b4c8;font-size:12px;padding:25px 0}@media(max-width:650px){.grid{grid-template-columns:1fr}.actions button{width:100%}.wrap{padding:16px}}
+</style></head><body>
+<header><h1>🔧 PartsHub</h1><div class="sub">Any Car. Any Part. From OEM to Your Local Store.</div><p><a href="index.html">← Back to parts search</a></p></header>
+<main class="wrap">
+<div class="banner"><strong>Free supplier listings.</strong> No listing or inventory-upload fees. <strong>Prototype:</strong> information entered here is saved only in this browser on this device. It is <em>not</em> submitted to PartsHub or published online. No accounts or shared inventory database exist yet.</div>
+<section class="panel"><h2>Join the PartsHub Supplier Network</h2><p class="sub">Independent stores, distributors, manufacturers, and salvage yards can prepare a free storefront and inventory listings. Suppliers are credited as the source of their own data.</p><div class="tabs"><button id="tab-standard" class="active" type="button">Parts store / supplier</button><button id="tab-salvage" type="button">Salvage yard</button></div></section>
+<section class="panel"><h2 id="heading">Supplier registration</h2>
+<form id="supplier-form"><div class="grid">
+<div class="field"><label for="business">Business name *</label><input id="business" required maxlength="100" autocomplete="organization"></div>
+<div class="field"><label for="contact">Contact name *</label><input id="contact" required maxlength="100" autocomplete="name"></div>
+<div class="field"><label for="email">Business email *</label><input id="email" type="email" required autocomplete="email"></div>
+<div class="field"><label for="phone">Phone</label><input id="phone" type="tel" autocomplete="tel"></div>
+<div class="field"><label for="city">City *</label><input id="city" required></div>
+<div class="field"><label for="state">State *</label><input id="state" required maxlength="30"></div>
+<div class="field"><label for="zip">ZIP code *</label><input id="zip" required inputmode="numeric" pattern="[0-9]{5}" maxlength="5"></div>
+<div class="field"><label for="website">Website (optional)</label><input id="website" type="url" placeholder="https://"></div>
+<div class="field full"><label for="logo">Supplier logo (PNG, JPG, or WebP; max 1 MB)</label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp"><p class="hint">Logo remains on this device in the prototype. Upload only artwork you have permission to use.</p><div id="logo-preview" class="preview hidden"><img id="logo-image" alt="Supplier logo preview"><span id="logo-caption"></span></div></div>
+<div class="field full"><label for="description">Business description</label><textarea id="description" rows="3" maxlength="500" placeholder="What parts do you specialize in?"></textarea></div>
+<div class="field full"><label><input id="permission" type="checkbox" style="width:auto" required> I confirm I represent this business and may submit its inventory and logo. *</label></div>
+</div><div class="actions"><button type="submit">Save supplier profile on this device</button><button type="button" id="clear-profile" class="secondary">Clear saved profile</button></div><p class="status" id="profile-status" role="status"></p></form></section>
+<section class="panel" id="standard-section"><h2>Free parts inventory listing</h2><p class="hint">Create sample inventory records for your store. They will appear below only on this device.</p>
+<form id="part-form"><div class="grid">
+<div class="field"><label for="part-name">Part name *</label><input id="part-name" required placeholder="Alternator"></div>
+<div class="field"><label for="part-number">Part number *</label><input id="part-number" required></div>
+<div class="field"><label for="part-brand">Brand / manufacturer</label><input id="part-brand"></div>
+<div class="field"><label for="part-condition">Condition</label><select id="part-condition"><option>New OEM</option><option>New aftermarket</option><option>Remanufactured</option><option>Used</option></select></div>
+<div class="field"><label for="part-price">Asking price (USD)</label><input id="part-price" type="number" min="0" step=".01"></div>
+<div class="field"><label for="part-quantity">Quantity</label><input id="part-quantity" type="number" min="0" step="1" value="1"></div>
+<div class="field full"><label for="part-fitment">Verified fitment / notes</label><textarea id="part-fitment" rows="2" placeholder="Year, make, model, engine; include limitations"></textarea></div>
+</div><div class="actions"><button type="submit">Add inventory item</button></div></form></section>
+<section class="panel hidden" id="salvage-section"><h2>Salvage yard onboarding</h2><p class="sub">List a donor vehicle first, then add available parts. Do not assume every component on a donor vehicle is available.</p>
+<form id="donor-form"><div class="grid">
+<div class="field"><label for="donor-year">Donor vehicle year (1955–2027) *</label><input id="donor-year" type="number" min="1955" max="2027" required placeholder="1996"></div>
+<div class="field"><label for="donor-make">Make *</label><input id="donor-make" required placeholder="Ford"></div>
+<div class="field"><label for="donor-model">Model *</label><input id="donor-model" required placeholder="Ranger"></div>
+<div class="field"><label for="donor-engine">Engine / trim</label><input id="donor-engine" placeholder="3.0L V6"></div>
+<div class="field"><label for="donor-vin">VIN (optional)</label><input id="donor-vin" maxlength="17" placeholder="For internal identification"></div>
+<div class="field"><label for="donor-stock">Yard stock number *</label><input id="donor-stock" required></div>
+<div class="field full"><label for="donor-notes">Vehicle notes / damage</label><textarea id="donor-notes" rows="2" placeholder="Front collision; engine runs"></textarea></div>
+</div><div class="actions"><button type="submit">Add donor vehicle</button></div></form>
+<hr style="border:0;border-top:1px solid #344963;margin:25px 0">
+<h3>List a part from a donor vehicle</h3><form id="salvage-part-form"><div class="grid">
+<div class="field"><label for="donor-select">Donor vehicle *</label><select id="donor-select" required><option value="">Add a donor vehicle first</option></select></div>
+<div class="field"><label for="salvage-part-name">Part name *</label><input id="salvage-part-name" required placeholder="Passenger door"></div>
+<div class="field"><label for="salvage-part-number">Part number (if known)</label><input id="salvage-part-number"></div>
+<div class="field"><label for="salvage-condition">Condition</label><select id="salvage-condition"><option>Used - tested working</option><option>Used - untested</option><option>Needs rebuilding</option><option>Core / for parts</option></select></div>
+<div class="field"><label for="salvage-price">Asking price (USD)</label><input id="salvage-price" type="number" min="0" step=".01"></div>
+<div class="field"><label for="salvage-availability">Availability</label><select id="salvage-availability"><option>Available</option><option>Reserved</option><option>Sold</option></select></div>
+<div class="field full"><label for="salvage-notes">Damage, interchange verification, pickup/shipping notes</label><textarea id="salvage-notes" rows="2"></textarea></div>
+</div><div class="actions"><button type="submit">Add salvage part</button></div></form></section>
+<section class="panel"><h2>Saved inventory on this device</h2><div id="inventory-list" class="hint">No items added yet.</div><div class="actions"><button id="export" type="button" class="secondary">Export my data (JSON)</button><button id="clear-inventory" type="button" class="secondary">Clear inventory</button></div><p class="hint">Export a backup before clearing browser data. A real public supplier directory requires a secure backend, authentication, moderation, and data-use policies.</p></section>
+<footer>PartsHub supplier registration prototype • Local browser storage only • No live supplier onboarding or public listings yet.</footer>
+</main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id), key='partshub-supplier-v1';
+let state;try{state=JSON.parse(localStorage.getItem(key))||{profile:{},donors:[],parts:[],mode:'standard'};}catch{state={profile:{},donors:[],parts:[],mode:'standard'};}
+state.donors=Array.isArray(state.donors)?state.donors:[];state.parts=Array.isArray(state.parts)?state.parts:[];
+const save=()=>{try{localStorage.setItem(key,JSON.stringify(state));return true}catch{$('profile-status').textContent='Storage full or unavailable. Export your data instead.';return false}};
+const fields=['business','contact','email','phone','city','state','zip','website','description'];
+for(const f of fields)if(state.profile[f])$(f).value=state.profile[f];
+function logoPreview(){const v=state.profile.logo;if(v){$('logo-image').src=v;$('logo-caption').textContent='Logo ready';$('logo-preview').classList.remove('hidden')}else $('logo-preview').classList.add('hidden')}
+logoPreview();
+function mode(m){state.mode=m;$('tab-standard').classList.toggle('active',m==='standard');$('tab-salvage').classList.toggle('active',m==='salvage');$('standard-section').classList.toggle('hidden',m!=='standard');$('salvage-section').classList.toggle('hidden',m!=='salvage');$('heading').textContent=m==='salvage'?'Salvage yard registration':'Supplier registration';save()}
+$('tab-standard').onclick=()=>mode('standard');$('tab-salvage').onclick=()=>mode('salvage');mode(state.mode==='salvage'?'salvage':'standard');
+$('logo').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;if(!['image/png','image/jpeg','image/webp'].includes(f.type)||f.size>1024*1024){alert('Please choose a PNG, JPG, or WebP logo under 1 MB.');e.target.value='';return}const reader=new FileReader();reader.onload=()=>{state.profile.logo=reader.result;logoPreview();save()};reader.readAsDataURL(f)});
+$('supplier-form').onsubmit=e=>{e.preventDefault();for(const f of fields)state.profile[f]=$(f).value.trim();state.profile.type=state.mode;state.profile.permission=$('permission').checked;if(save())$('profile-status').textContent='Profile saved locally. Not submitted or published.'};
+$('clear-profile').onclick=()=>{if(!confirm('Clear saved supplier profile and logo?'))return;state.profile={};save();$('supplier-form').reset();logoPreview();$('profile-status').textContent='Saved profile cleared.'};
+function read(ids){return Object.fromEntries(ids.map(id=>[id,$(id).value.trim()]))}
+$('part-form').onsubmit=e=>{e.preventDefault();state.parts.push({id:Date.now()+'-'+Math.random().toString(36).slice(2),kind:'store',...read(['part-name','part-number','part-brand','part-condition','part-price','part-quantity','part-fitment'])});save();e.target.reset();$('part-quantity').value=1;render()};
+$('donor-form').onsubmit=e=>{e.preventDefault();const d=read(['donor-year','donor-make','donor-model','donor-engine','donor-vin','donor-stock','donor-notes']);if(Number(d['donor-year'])<1955||Number(d['donor-year'])>2027)return alert('Year must be between 1955 and 2027.');state.donors.push({id:Date.now()+'-'+Math.random().toString(36).slice(2),...d});save();e.target.reset();render()};
+$('salvage-part-form').onsubmit=e=>{e.preventDefault();const d=state.donors.find(x=>x.id===$('donor-select').value);if(!d)return alert('Choose a donor vehicle.');state.parts.push({id:Date.now()+'-'+Math.random().toString(36).slice(2),kind:'salvage',donorId:d.id,...read(['salvage-part-name','salvage-part-number','salvage-condition','salvage-price','salvage-availability','salvage-notes'])});save();e.target.reset();render()};
+const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render(){const sel=$('donor-select');sel.innerHTML='<option value="">Choose donor vehicle</option>'+state.donors.map(d=>`<option value="${escapeHTML(d.id)}">${escapeHTML(d['donor-year']+' '+d['donor-make']+' '+d['donor-model']+' • '+d['donor-stock'])}</option>`).join('');
+const list=$('inventory-list');if(!state.parts.length){list.textContent='No inventory items added yet.';return}
+list.innerHTML=state.parts.map(p=>{const d=state.donors.find(x=>x.id===p.donorId);const name=p.kind==='salvage'?p['salvage-part-name']:p['part-name'];const price=p.kind==='salvage'?p['salvage-price']:p['part-price'];const details=p.kind==='salvage'?(d?`${d['donor-year']} ${d['donor-make']} ${d['donor-model']} • Stock ${d['donor-stock']}`:'Donor not found'):`${p['part-brand']||''} • ${p['part-number']}`;return `<div class="item"><strong>${escapeHTML(name)}</strong> ${price?`• $${escapeHTML(Number(price).toFixed(2))}`:''}<p class="hint">${escapeHTML(details)} • ${escapeHTML(p.kind==='salvage'?p['salvage-availability']:p['part-condition'])}</p><button class="secondary remove" data-id="${escapeHTML(p.id)}" type="button" style="width:auto">Remove item</button></div>`}).join('');
+list.querySelectorAll('.remove').forEach(b=>b.onclick=()=>{state.parts=state.parts.filter(p=>p.id!==b.dataset.id);save();render()})}
+$('clear-inventory').onclick=()=>{if(!confirm('Delete all locally saved inventory and donor vehicles?'))return;state.parts=[];state.donors=[];save();render()};
+$('export').onclick=()=>{const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='partshub-supplier-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+render();
+})();
+</script></body></html>
