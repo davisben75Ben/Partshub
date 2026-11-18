@@ -69,19 +69,42 @@ function resetWallpaper(){document.body.style.removeProperty('--vehicle-photo')}
 function updateVehicleWallpaper(){
  const year=$('year').value,make=$('make').value,model=$('manual-model').value.trim()||$('model').value,request=++wallpaperRequest;
  if(customWallpaper){credit.textContent='Background: your uploaded vehicle photo (this session only).';return}
- if(!/^\d{4}$/.test(year)||Number(year)<1955||Number(year)>2027||!make||!model){resetWallpaper();credit.textContent='Choose a vehicle to see a matching wallpaper.';return}
- resetWallpaper();credit.textContent=`Finding a photo of a ${year} ${make} ${model}…`;
- const term=[year,make,model].join(' ');
- const url='https://commons.wikimedia.org/w/api.php?origin=*&action=query&generator=search&gsrsearch='+encodeURIComponent('filetype:bitmap '+term)+'&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=1500&format=json';
- fetch(url).then(r=>{if(!r.ok)throw Error('Unavailable');return r.json()}).then(data=>{
+ resetWallpaper();
+ if(!/^\\d{4}$/.test(year)||Number(year)<1955||Number(year)>2027||!make||!model){credit.textContent='Choose a vehicle to see a matching wallpaper.';return}
+ credit.textContent='Looking for a vehicle photo…';
+ const queries=[year+' '+make+' '+model,make+' '+model];
+ const normalize=x=>x.toLowerCase().replace(/[^a-z0-9]/g,'');
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),7000);
+ async function findPhoto(){
+  for(const term of queries){
+   const url='https://commons.wikimedia.org/w/api.php?origin=*&action=query&generator=search&gsrsearch='+encodeURIComponent('filetype:bitmap '+term)+'&gsrnamespace=6&gsrlimit=30&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=1500&format=json';
+   const response=await fetch(url,{signal:controller.signal});
+   if(!response.ok)continue;
+   const data=await response.json();
+   const pages=Object.values(data.query?.pages||{});
+   const chosen=pages.find(p=>{
+    const name=normalize(p.title||'');
+    const info=p.imageinfo?.[0];
+    return name.includes(normalize(make))&&name.includes(normalize(model))&&info?.thumburl&&/^https:\/\//.test(info.thumburl)&&/\\.(jpe?g|png|webp)$/i.test(info.url||'');
+   });
+   if(chosen)return chosen.imageinfo[0];
+  }
+  return null;
+ }
+ findPhoto().then(info=>{
   if(request!==wallpaperRequest||customWallpaper)return;
-  const pages=Object.values(data.query?.pages||{});
-  const terms=[make,model].map(x=>x.toLowerCase().replace(/[^a-z0-9]/g,''));
-  const chosen=pages.find(p=>{const name=p.title.toLowerCase().replace(/[^a-z0-9]/g,'');return terms.every(t=>name.includes(t))&&p.imageinfo?.[0]?.thumburl&&/\.(jpe?g|png|webp)$/i.test(p.imageinfo[0].url||'')});
-  if(!chosen){resetWallpaper();credit.textContent='No matching public photo found. Showing built-in vehicle illustration.';return}
-  const info=chosen.imageinfo[0],source=info.descriptionurl||'https://commons.wikimedia.org/';setWallpaper(info.thumburl);
-  credit.replaceChildren(document.createTextNode('Illustrative vehicle photo · '));const a=document.createElement('a');a.href=source;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Image source and license (Wikimedia Commons)';credit.append(a);
- }).catch(()=>{if(request!==wallpaperRequest||customWallpaper)return;resetWallpaper();credit.textContent='Online photos unavailable. Showing built-in vehicle illustration.'})
+  if(!info){credit.textContent='No matching public photo found. You can upload your own vehicle photo.';return}
+  const img=new Image();
+  img.onload=()=>{
+   if(request!==wallpaperRequest||customWallpaper)return;
+   setWallpaper(info.thumburl);
+   credit.replaceChildren(document.createTextNode('Illustrative vehicle photo · '));
+   const a=document.createElement('a');a.href=info.descriptionurl||'https://commons.wikimedia.org/';a.target='_blank';a.rel='noopener noreferrer';a.textContent='Image source and license (Wikimedia Commons)';credit.append(a);
+  };
+  img.onerror=()=>{if(request===wallpaperRequest&&!customWallpaper)credit.textContent='Photo could not load. Upload your own vehicle photo instead.'};
+  img.src=info.thumburl;
+ }).catch(()=>{if(request===wallpaperRequest&&!customWallpaper)credit.textContent='Public photo search unavailable. You can upload your own vehicle photo.'}).finally(()=>clearTimeout(timeout));
 }
 $('custom-wallpaper').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>5*1024*1024){alert('Choose a JPG, PNG, or WebP image under 5 MB.');e.target.value='';return}if(customWallpaper)URL.revokeObjectURL(customWallpaper);customWallpaper=URL.createObjectURL(f);++wallpaperRequest;setWallpaper(customWallpaper);credit.textContent='Background: your uploaded vehicle photo (this session only).'});
 $('reset-wallpaper').addEventListener('click',()=>{if(customWallpaper)URL.revokeObjectURL(customWallpaper);customWallpaper=null;$('custom-wallpaper').value='';updateVehicleWallpaper()});
