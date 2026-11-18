@@ -70,7 +70,7 @@ function updateVehicleWallpaper(){
  const year=$('year').value,make=$('make').value,model=$('manual-model').value.trim()||$('model').value,request=++wallpaperRequest;
  if(customWallpaper){credit.textContent='Background: your uploaded vehicle photo (this session only).';return}
  resetWallpaper();
- if(!/^\\d{4}$/.test(year)||Number(year)<1955||Number(year)>2027||!make||!model){credit.textContent='Choose a vehicle to see a matching wallpaper.';return}
+ if(!/^\d{4}$/.test(year)||Number(year)<1955||Number(year)>2027||!make||!model){credit.textContent='Choose a vehicle to see a matching wallpaper.';return}
  credit.textContent='Looking for a vehicle photo…';
  const queries=[year+' '+make+' '+model,make+' '+model];
  const normalize=x=>x.toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -86,7 +86,7 @@ function updateVehicleWallpaper(){
    const chosen=pages.find(p=>{
     const name=normalize(p.title||'');
     const info=p.imageinfo?.[0];
-    return name.includes(normalize(make))&&name.includes(normalize(model))&&info?.thumburl&&/^https:\/\//.test(info.thumburl)&&/\\.(jpe?g|png|webp)$/i.test(info.url||'');
+    return name.includes(normalize(make))&&name.includes(normalize(model))&&info?.thumburl&&/^https:\/\//.test(info.thumburl)&&/\.(jpe?g|png|webp)$/i.test(info.url||'');
    });
    if(chosen)return chosen.imageinfo[0];
   }
