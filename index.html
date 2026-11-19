@@ -69,6 +69,25 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
  const heading=document.createElement('h2');heading.textContent='Part number search: '+number;section.append(heading);
  const status=document.createElement('p');status.className='muted';status.textContent='Checking connected listings…';section.append(status);
  try{
+  const catalogResponse=await fetch('/api/catalog/search?'+new URLSearchParams({partNumber:number}),{headers:{Accept:'application/json'}});
+  if(catalogResponse.ok){
+   const catalog=await catalogResponse.json();
+   const articles=Array.isArray(catalog.catalogResults?.articles)?catalog.catalogResults.articles:[];
+   const catalogPanel=document.createElement('div');catalogPanel.className='panel';
+   const catalogTitle=document.createElement('h3');catalogTitle.textContent='Auto Parts Catalog';catalogPanel.append(catalogTitle);
+   const catalogInfo=document.createElement('p');catalogInfo.className='muted';
+   catalogInfo.textContent=articles.length?articles.length+' catalog matches returned. Verify fitment before ordering.':'No catalog matches for this number. Try a manufacturer catalog number.';
+   catalogPanel.append(catalogInfo);
+   for(const article of articles.slice(0,20)){
+    const item=document.createElement('pre');item.style.whiteSpace='pre-wrap';item.style.overflowWrap='anywhere';
+    item.textContent=JSON.stringify(article,null,2);catalogPanel.append(item);
+   }
+   section.append(catalogPanel);
+  }else{
+   const note=document.createElement('p');note.className='muted';note.textContent='Catalog lookup unavailable ('+catalogResponse.status+').';section.append(note);
+  }
+ }catch(e){const note=document.createElement('p');note.className='muted';note.textContent='Catalog lookup could not be completed.';section.append(note)}
+ try{
   const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),7000);
   let response;try{response=await fetch('/api/offers?'+new URLSearchParams({partNumber:number,zip:$('zip').value}),{signal:ctrl.signal,headers:{Accept:'application/json'}})}finally{clearTimeout(timer)}
   if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))throw Error('Pricing unavailable');
