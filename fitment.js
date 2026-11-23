@@ -20,7 +20,7 @@
     <p class="hint">Catalog fitment check (select the exact catalog vehicle before checking):</p>
     <div class="fitment-grid">
       <div><label for="fit-country">Catalog country</label><select id="fit-country"><option value="">Loading countries…</option></select></div>
-      <div><label for="fit-type">Vehicle type</label><select id="fit-type"><option value="1">Passenger vehicle</option><option value="2">Commercial vehicle / truck</option></select></div>
+      <div><label for="fit-type">Vehicle type</label><select id="fit-type"><option value="1">Passenger vehicle</option><option value="2" selected>Commercial vehicle / truck</option></select></div>
       <div><label for="fit-make">Catalog make</label><select id="fit-make" disabled><option value="">Choose country and type</option></select></div>
       <div><label for="fit-model">Catalog model</label><select id="fit-model" disabled><option value="">Choose make</option></select></div>
       <div style="grid-column:1/-1"><label for="fit-vehicle">Exact vehicle / engine variant</label><select id="fit-vehicle" disabled><option value="">Choose model</option></select></div>
