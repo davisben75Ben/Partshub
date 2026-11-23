@@ -1,9 +1,9 @@
 // PartsHub AutoPartsAPI adapter; server-side only.
 // Configure Cloudflare secrets AUTOPARTS_API_KEY and AUTOPARTS_API_BASE_URL.
 // Provider documentation: https://auto-parts-catalog.apiprofile.com/documentation
+const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
 const positiveInt=value=>/^\d+$/.test(String(value||""))&&Number(value)>0?Number(value):null;
 const validPart=value=>Boolean(value&&value.length<=80&&/^[A-Za-z0-9 ._\/-]+$/.test(value));
-const validPart=value=>Boolean(value&&value.length<=80&&/^[A-Za-z0-9 ._\\/-]+$/.test(value));
 export async function handleAutoParts(request,env){
   const input=new URL(request.url);
   const routes=["/api/catalog/health","/api/catalog/search","/api/catalog/countries","/api/catalog/manufacturers","/api/catalog/models","/api/catalog/vehicles","/api/catalog/compatible-vehicles"];
