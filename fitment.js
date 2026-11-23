@@ -46,7 +46,7 @@
   };
   const idOf = obj => {
     if (!obj || typeof obj !== "object") return null;
-    for (const key of ["countryFilterId","manufacturerId","modelId","vehicleId","typeId","id","ID","Id"]) {
+    for (const key of ["countryFilterId","countryId","manufacturerId","manuId","modelId","vehicleId","vehicleTypeId","typeId","id","ID","Id"]) {
       const value = obj[key];
       if (value != null && /^\d+$/.test(String(value)) && Number(value) > 0) return Number(value);
     }
