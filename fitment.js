@@ -87,8 +87,12 @@
       const rows = mapRows(await getList("/api/catalog/countries"), "country");
       setOptions(country, rows, rows.length ? "Select country" : "No countries returned");
       const preferred = rows.find(r => /united states|\busa\b|\bus\b/i.test(r.label));
-      if (preferred) country.value = String(preferred.id);
-      status.textContent = rows.length ? "Choose the catalog vehicle type and country, then select your exact vehicle." : "The provider returned no country list.";
+      if (preferred) {
+        country.value = String(preferred.id);
+        await loadMakes();
+      } else {
+        status.textContent = rows.length ? "Choose the catalog vehicle type and country, then select your exact vehicle." : "The provider returned no country list.";
+      }
     } catch (e) {
       setOptions(country, [], "Country catalog unavailable");
       status.textContent = "Could not load provider countries: " + e.message;
