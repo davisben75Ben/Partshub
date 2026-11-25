@@ -99,13 +99,13 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
  if(!part||part.length>80||!/^[A-Za-z0-9 ._\\/-]+$/.test(part)){status.textContent='Enter a valid part number (up to 80 characters).';return}
  status.textContent='Checking catalog provider…';
  try{
-  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),13000);
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),27000);
   let response;try{response=await fetch('/api/catalog/search?'+new URLSearchParams({partNumber:part}),{signal:ctrl.signal,headers:{Accept:'application/json'}})}finally{clearTimeout(timer)}
   if(!response.headers.get('content-type')?.includes('application/json'))throw Error('Catalog endpoint returned a non-JSON response');
   const data=await response.json();
   if(!response.ok){status.textContent='Catalog unavailable: '+(data.error||data.message||'HTTP '+response.status)+'.';return}
   if(!data.connected){status.textContent='Catalog provider is not connected.';return}
-  const catalog=data.catalogResults;const articles=Array.isArray(catalog?.articles)?catalog.articles:[];if(!articles.length){status.textContent='The catalog responded but found no matching articles for '+part+'. This does not mean the part number is invalid; coverage or search rules may differ.';return}status.textContent='Found '+articles.length+' catalog article(s) for '+part+'. Fitment, stock and pricing are not verified.';
+  const catalog=data.catalogResults;const articles=Array.isArray(catalog?.articles)?catalog.articles:[];if(!articles.length){status.textContent='No matching catalog articles for '+part+'. Formats checked: '+(Array.isArray(data.attemptedFormats)?data.attemptedFormats.join(', '):part)+'. This does not mean the part number is invalid.';return}status.textContent='Found '+articles.length+' catalog article(s) for '+part+'. Fitment, stock and pricing are not verified.';
   const pre=document.createElement('pre');pre.style.whiteSpace='pre-wrap';pre.style.overflowWrap='anywhere';pre.textContent=JSON.stringify(data.catalogResults,null,2).slice(0,12000);section.append(pre);
  }catch(e){status.textContent='Catalog lookup failed: '+(e.name==='AbortError'?'request timed out':'service unreachable')+'.'}
 }
