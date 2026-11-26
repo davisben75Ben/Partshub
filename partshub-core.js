@@ -8,7 +8,7 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:
 export async function handleCore(request,env={}){
  const url=new URL(request.url),path=url.pathname;
  if(path!=="/api/core/health"&&path!=="/api/core/search")return json({error:"Not found"},404);
- const db=env.PARTSHUB_DB;
+ const db=env.DB;
  if(path==="/api/core/health"){
   if(!db)return json({connected:true,service:"PartsHub Core",version:"0.2.0",catalogStorage:"seed-only",databaseConnected:false,seedCount:seed.length,pricesIncluded:false,fitmentDataAvailable:false});
   try{const check=await db.prepare("SELECT COUNT(*) AS count FROM parts").first();
