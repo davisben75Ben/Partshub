@@ -14,5 +14,13 @@
       "database_name": "partshub-catalog",
       "database_id": "afb00d5e-0190-4e5f-83b0-171a8362cdc2"
     }
-  ]
+  ],
+  "previews": {
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_id": "afb00d5e-0190-4e5f-83b0-171a8362cdc2"
+      }
+    ]
+  }
 }
