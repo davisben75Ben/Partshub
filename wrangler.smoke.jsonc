@@ -1,0 +1,5 @@
+{
+  "name": "partshub-deployment-smoke-test",
+  "main": "deployment-smoke-test.js",
+  "compatibility_date": "2026-11-17"
+}
