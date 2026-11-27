@@ -163,8 +163,8 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
     card.append(detail);list.append(card);
    }
   };
-  show(exact,'Exact part-number matches');
-  show(candidates,'Possible matches — verify manufacturer and full number');
+  show(exact,'Exact manufacturer part-number matches — brand confirmation required');
+  show(candidates,'Unverified number-related results — not confirmed interchanges');
   if(!exact.length&&!candidates.length){const note=document.createElement('p');note.className='muted';note.textContent='No records returned for the original number or its limited search variants. This does not establish that the part is invalid.';section.append(note)}
  }catch(e){status.textContent='Catalog lookup failed: '+(e.name==='AbortError'?'request timed out':'service unreachable')+'.'}
 }
