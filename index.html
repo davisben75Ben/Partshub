@@ -97,19 +97,28 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
  const part=$('part-number').value.trim();
  const status=document.createElement('p');status.className='muted';section.append(status);
  if(!part||part.length>80||!/^[A-Za-z0-9 ._\\/-]+$/.test(part)){status.textContent='Enter a valid part number (up to 80 characters).';return}
- status.textContent='Checking catalog provider…';
+ status.textContent='Searching connected AutoPartsAPI catalog…';
  try{
   const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),27000);
-  let response;try{response=await fetch('/api/core/search?'+new URLSearchParams({partNumber:part}),{signal:ctrl.signal,headers:{Accept:'application/json'}})}finally{clearTimeout(timer)}
+  let response;try{response=await fetch('/api/catalog/search?'+new URLSearchParams({partNumber:part}),{signal:ctrl.signal,headers:{Accept:'application/json'}})}finally{clearTimeout(timer)}
   if(!response.headers.get('content-type')?.includes('application/json'))throw Error('Catalog endpoint returned a non-JSON response');
   const data=await response.json();
   if(!response.ok){status.textContent='Catalog unavailable: '+(data.error||data.message||'HTTP '+response.status)+'.';return}
-  const results=Array.isArray(data.results)?data.results:[];
-  if(!results.length){status.textContent='No matching references in the PartsHub starter catalog for '+part+'. Coverage is being built; this does not mean the part is invalid.';return}
-  status.textContent='Found '+results.length+' PartsHub reference(s) for '+part+'. Vehicle fitment, pricing, stock and interchange are not verified.';
-  const list=document.createElement('ul');section.append(list);
-  for(const item of results){const li=document.createElement('li');li.textContent=[item.brand,item.partNumber,item.category].filter(Boolean).join(' — ');list.append(li)}
-
+  const payload=data.catalogResults||{};
+  const results=Array.isArray(payload.articles)?payload.articles:Array.isArray(payload.results)?payload.results:[];
+  if(!results.length){status.textContent='No catalog matches returned for '+part+'. Try another exact part number; an empty result does not mean the part is invalid.';return}
+  status.textContent='Found '+results.length+' provider record(s) for '+part+'. These are catalog references, not verified fitment, prices or inventory.';
+  const list=document.createElement('div');list.className='offers';section.append(list);
+  for(const item of results.slice(0,50)){
+   const card=document.createElement('div');card.className='offer';
+   const title=document.createElement('strong');
+   title.textContent=[item.brandName||item.brand||item.supplierName||item.supplier?.name,item.articleNumber||item.articleNo||item.articleNumberFormatted||item.articleId||item.partNumber||part].filter(Boolean).join(' — ');
+   card.append(title);
+   const details=document.createElement('p');details.className='muted';
+   details.textContent=[item.genericArticleDescription||item.description||item.productName||item.articleName,item.articleId?'Catalog ID: '+item.articleId:''].filter(Boolean).join(' · ')||'Provider catalog record';
+   card.append(details);list.append(card);
+  }
+  if(results.length>50){const more=document.createElement('p');more.className='muted';more.textContent='Showing first 50 records.';section.append(more)}
  }catch(e){status.textContent='Catalog lookup failed: '+(e.name==='AbortError'?'request timed out':'service unreachable')+'.'}
 }
 $('number-search').addEventListener('click',searchByNumber);
