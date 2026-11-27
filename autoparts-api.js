@@ -54,6 +54,29 @@ export async function handleAutoParts(request,env){
         data=second.data;matchedFormat=variants[1];
       }
     }
+    // Opt-in comparison for two known test parts. Never expose upstream data or credentials.
+    // Invoke with ?partNumber=R45TS&catalogDiag=1 or VS12869C; no customer-facing result changes.
+    if(input.searchParams.get("catalogDiag")==="1"&&["R45TS","VS12869C"].includes(part.toUpperCase())){
+      const target=new URL("/api/articles/article-number-details/type-id/1",base);
+      target.searchParams.set("articleNo",part);
+      target.searchParams.set("langId","4");
+      try{
+        const upstream=await fetch(target.toString(),{headers:{"x-apiprofile-key":env.AUTOPARTS_API_KEY,"accept":"application/json"},signal:AbortSignal.timeout(12000)});
+        let diagnostic={partNumber:part,method:"article-number-details",upstreamStatus:upstream.status};
+        if(upstream.ok){
+          try{
+            const value=await upstream.json();
+            diagnostic.shape=Array.isArray(value)?"array":value===null?"null":typeof value;
+            diagnostic.keys=value&&typeof value==="object"&&!Array.isArray(value)?Object.keys(value).slice(0,20):[];
+            diagnostic.arrayLength=Array.isArray(value)?value.length:null;
+            diagnostic.articleCount=Array.isArray(value?.articles)?value.articles.length:null;
+            diagnostic.resultCount=Array.isArray(value?.results)?value.results.length:null;
+            diagnostic.dataPresent=Boolean(value&&typeof value==="object"&&(Array.isArray(value)?value.length>0:Object.keys(value).length>0));
+          }catch{diagnostic.invalidJson=true}
+        }
+        console.log("PARTSHUB_ALTERNATE_DIAG",JSON.stringify(diagnostic));
+      }catch{console.log("PARTSHUB_ALTERNATE_DIAG",JSON.stringify({partNumber:part,method:"article-number-details",networkError:true}))}
+    }
     return reply({connected:true,provider:"AutoPartsAPI",partNumber:part,attemptedFormats:attempted,matchedFormat,catalogResults:data,pricesIncluded:false,fitmentVerified:false,notice:"Catalog results are not live retailer offers; verify vehicle fitment."});
   }catch{return reply({connected:false,error:"Catalog provider could not be reached"},502)}
 }
