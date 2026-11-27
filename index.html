@@ -101,15 +101,10 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
  const requested=normalizeNumber(part);
  const primaryFields=['articleNumber','articleNo','articleNumberFormatted','partNumber','sku','manufacturerPartNumber'];
  const primaryNumbers=item=>primaryFields.map(field=>item[field]).filter(value=>value!=null&&String(value).trim());
- const variants=[part];
- // Conservative format fallback: strip spaces/punctuation first; only try a
- // shorter number as a candidate, never as proof of an exact manufacturer part.
+ // Search only the requested manufacturer number and punctuation-only formatting variants.
+ // Dropping prefixes or suffixes creates unrelated part-number collisions.
  const compact=part.replace(/[ ._\\/-]/g,'');
- if(compact!==part)variants.push(compact);
- const suffix=compact.match(/^([A-Za-z]{1,3})([0-9]{4,})([A-Za-z])$/);
- if(suffix){variants.push(suffix[2]+suffix[3],suffix[2]);}
- else if(/^[0-9]{4,}[A-Za-z]$/.test(compact))variants.push(compact.slice(0,-1));
- const attempts=[...new Set(variants)].slice(0,4);
+ const attempts=[...new Set([part,compact])];
  const exact=[],candidates=[],seen=new Set();
  const add=(item,verified,query)=>{
   const nums=primaryNumbers(item);
@@ -142,8 +137,7 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
     const isExact=primaryNumbers(item).some(value=>normalizeNumber(value)===requested);
     // A loose provider hit is a candidate only when it has a primary number
     // that shares the searched numeric core. Unrelated search hits stay hidden.
-    const core=(requested.match(/[0-9]{4,}/)||[])[0]||requested;
-    const related=primaryNumbers(item).some(value=>normalizeNumber(value).includes(core));
+    const related=primaryNumbers(item).some(value=>normalizeNumber(value)===requested);
     if(isExact||related)add(item,isExact,query);
    }
    if(exact.length)break;
@@ -164,8 +158,8 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
    }
   };
   show(exact,'Exact manufacturer part-number matches — brand confirmation required');
-  show(candidates,'Unverified number-related results — not confirmed interchanges');
-  if(!exact.length&&!candidates.length){const note=document.createElement('p');note.className='muted';note.textContent='No records returned for the original number or its limited search variants. This does not establish that the part is invalid.';section.append(note)}
+  // Do not show shortened-number or unrelated-brand candidates as possible interchanges.
+  if(!exact.length&&!candidates.length){const note=document.createElement('p');note.className='muted';note.textContent='No exact manufacturer part-number match found. Similar numbers are deliberately hidden; this does not establish that the part is invalid.';section.append(note)}
  }catch(e){status.textContent='Catalog lookup failed: '+(e.name==='AbortError'?'request timed out':'service unreachable')+'.'}
 }
 $('number-search').addEventListener('click',searchByNumber);
