@@ -110,8 +110,10 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
   // Fail closed: a provider's loosely related records are not exact part-number matches.
   const normalizeNumber=value=>String(value??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const requested=normalizeNumber(part);
-  const numberFields=['articleNumber','articleNo','articleNumberFormatted','partNumber','sku','manufacturerPartNumber','oeNumber'];
-  const exact=results.filter(item=>numberFields.some(field=>item[field]!=null&&normalizeNumber(item[field])===requested));
+  // Only primary article numbers establish an exact match. OE/interchange numbers
+  // are references, not proof that the returned article is the requested part.
+  const primaryFields=['articleNumber','articleNo','articleNumberFormatted','partNumber','sku','manufacturerPartNumber'];
+  const exact=results.filter(item=>primaryFields.some(field=>item[field]!=null&&normalizeNumber(item[field])===requested));
   const unverified=results.length-exact.length;
   status.textContent=exact.length+' exact part-number match(es) for '+part+'. '+unverified+' other provider record(s) withheld from exact matches. Fitment, price and stock remain unverified.';
   if(!exact.length){const note=document.createElement('p');note.className='muted';note.textContent='The provider returned records, but none contained a matching part number. No exact match can be confirmed.';section.append(note);return}
