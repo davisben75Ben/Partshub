@@ -68,8 +68,15 @@ export async function handleAutoParts(request,env){
             const value=await upstream.json();
             diagnostic.shape=Array.isArray(value)?"array":value===null?"null":typeof value;
             diagnostic.keys=value&&typeof value==="object"&&!Array.isArray(value)?Object.keys(value).slice(0,20):[];
+            const articles=value&&typeof value==="object"?value.articles:undefined;
+            const countArticles=value&&typeof value==="object"?value.countArticles:undefined;
             diagnostic.arrayLength=Array.isArray(value)?value.length:null;
-            diagnostic.articleCount=Array.isArray(value?.articles)?value.articles.length:null;
+            diagnostic.articlesType=articles===null?"null":Array.isArray(articles)?"array":typeof articles;
+            diagnostic.articleCount=Array.isArray(articles)?articles.length:null;
+            diagnostic.articlesKeys=articles&&typeof articles==="object"&&!Array.isArray(articles)?Object.keys(articles).slice(0,20):[];
+            diagnostic.countArticlesType=countArticles===null?"null":typeof countArticles;
+            diagnostic.countArticlesValue=["number","string","boolean"].includes(typeof countArticles)?countArticles:null;
+            diagnostic.totalPages=value?.totalPages??null;
             diagnostic.resultCount=Array.isArray(value?.results)?value.results.length:null;
             diagnostic.dataPresent=Boolean(value&&typeof value==="object"&&(Array.isArray(value)?value.length>0:Object.keys(value).length>0));
           }catch{diagnostic.invalidJson=true}
