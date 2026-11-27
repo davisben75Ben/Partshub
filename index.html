@@ -138,8 +138,13 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
    const payload=data.catalogResults||{};
    const results=Array.isArray(payload.articles)?payload.articles:Array.isArray(payload.results)?payload.results:[];
    for(const item of results){
+    if(!item||typeof item!=='object'||Array.isArray(item))continue;
     const isExact=primaryNumbers(item).some(value=>normalizeNumber(value)===requested);
-    add(item,isExact,query);
+    // A loose provider hit is a candidate only when it has a primary number
+    // that shares the searched numeric core. Unrelated search hits stay hidden.
+    const core=(requested.match(/[0-9]{4,}/)||[])[0]||requested;
+    const related=primaryNumbers(item).some(value=>normalizeNumber(value).includes(core));
+    if(isExact||related)add(item,isExact,query);
    }
    if(exact.length)break;
   }
