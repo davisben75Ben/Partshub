@@ -107,18 +107,25 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
   const payload=data.catalogResults||{};
   const results=Array.isArray(payload.articles)?payload.articles:Array.isArray(payload.results)?payload.results:[];
   if(!results.length){status.textContent='No catalog matches returned for '+part+'. Try another exact part number; an empty result does not mean the part is invalid.';return}
-  status.textContent='Found '+results.length+' provider record(s) for '+part+'. These are catalog references, not verified fitment, prices or inventory.';
+  // Fail closed: a provider's loosely related records are not exact part-number matches.
+  const normalizeNumber=value=>String(value??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const requested=normalizeNumber(part);
+  const numberFields=['articleNumber','articleNo','articleNumberFormatted','partNumber','sku','manufacturerPartNumber','oeNumber'];
+  const exact=results.filter(item=>numberFields.some(field=>item[field]!=null&&normalizeNumber(item[field])===requested));
+  const unverified=results.length-exact.length;
+  status.textContent=exact.length+' exact part-number match(es) for '+part+'. '+unverified+' other provider record(s) withheld from exact matches. Fitment, price and stock remain unverified.';
+  if(!exact.length){const note=document.createElement('p');note.className='muted';note.textContent='The provider returned records, but none contained a matching part number. No exact match can be confirmed.';section.append(note);return}
   const list=document.createElement('div');list.className='offers';section.append(list);
-  for(const item of results.slice(0,50)){
+  for(const item of exact.slice(0,50)){
    const card=document.createElement('div');card.className='offer';
    const title=document.createElement('strong');
-   title.textContent=[item.brandName||item.brand||item.supplierName||item.supplier?.name,item.articleNumber||item.articleNo||item.articleNumberFormatted||item.articleId||item.partNumber||part].filter(Boolean).join(' — ');
+   title.textContent=[item.brandName||item.brand||item.supplierName||item.supplier?.name,item.articleNumber||item.articleNo||item.articleNumberFormatted||item.partNumber||item.manufacturerPartNumber||item.sku].filter(Boolean).join(' — ');
    card.append(title);
    const details=document.createElement('p');details.className='muted';
    details.textContent=[item.genericArticleDescription||item.description||item.productName||item.articleName,item.articleId?'Catalog ID: '+item.articleId:''].filter(Boolean).join(' · ')||'Provider catalog record';
    card.append(details);list.append(card);
   }
-  if(results.length>50){const more=document.createElement('p');more.className='muted';more.textContent='Showing first 50 records.';section.append(more)}
+  if(exact.length>50){const more=document.createElement('p');more.className='muted';more.textContent='Showing first 50 records.';section.append(more)}
  }catch(e){status.textContent='Catalog lookup failed: '+(e.name==='AbortError'?'request timed out':'service unreachable')+'.'}
 }
 $('number-search').addEventListener('click',searchByNumber);
