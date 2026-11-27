@@ -97,28 +97,75 @@ const money=x=>'$'+x.toFixed(2);function render(){let q=$('query').value.trim().
  const part=$('part-number').value.trim();
  const status=document.createElement('p');status.className='muted';section.append(status);
  if(!part||part.length>80||!/^[A-Za-z0-9 ._\\/-]+$/.test(part)){status.textContent='Enter a valid part number (up to 80 characters).';return}
+ const normalizeNumber=value=>String(value??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+ const requested=normalizeNumber(part);
+ const primaryFields=['articleNumber','articleNo','articleNumberFormatted','partNumber','sku','manufacturerPartNumber'];
+ const primaryNumbers=item=>primaryFields.map(field=>item[field]).filter(value=>value!=null&&String(value).trim());
+ const variants=[part];
+ // Conservative format fallback: strip spaces/punctuation first; only try a
+ // shorter number as a candidate, never as proof of an exact manufacturer part.
+ const compact=part.replace(/[ ._\\/-]/g,'');
+ if(compact!==part)variants.push(compact);
+ const suffix=compact.match(/^([A-Za-z]{1,3})([0-9]{4,})([A-Za-z])$/);
+ if(suffix){variants.push(suffix[2]+suffix[3],suffix[2]);}
+ else if(/^[0-9]{4,}[A-Za-z]$/.test(compact))variants.push(compact.slice(0,-1));
+ const attempts=[...new Set(variants)].slice(0,4);
+ const exact=[],candidates=[],seen=new Set();
+ const add=(item,verified,query)=>{
+  const nums=primaryNumbers(item);
+  const key=[item.brandName||item.brand||item.supplierName||'',...nums,item.articleId||''].join('|').toUpperCase();
+  if(seen.has(key)){
+   // A later exact response must upgrade an earlier tentative candidate.
+   if(verified){
+    const index=candidates.findIndex(entry=>entry.key===key);
+    if(index!==-1){candidates.splice(index,1);exact.push({item,query,key})}
+   }
+   return;
+  }
+  seen.add(key);
+  (verified?exact:candidates).push({item,query,key});
+ };
  status.textContent='Searching connected AutoPartsAPI catalog…';
  try{
-  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),27000);
-  let response;try{response=await fetch('/api/catalog/search?'+new URLSearchParams({partNumber:part}),{signal:ctrl.signal,headers:{Accept:'application/json'}})}finally{clearTimeout(timer)}
-  if(!response.headers.get('content-type')?.includes('application/json'))throw Error('Catalog endpoint returned a non-JSON response');
-  const data=await response.json();
-  if(!response.ok){status.textContent='Catalog unavailable: '+(data.error||data.message||'HTTP '+response.status)+'.';return}
-  const payload=data.catalogResults||{};
-  const results=Array.isArray(payload.articles)?payload.articles:Array.isArray(payload.results)?payload.results:[];
-  if(!results.length){status.textContent='No catalog matches returned for '+part+'. Try another exact part number; an empty result does not mean the part is invalid.';return}
-  status.textContent='Found '+results.length+' provider record(s) for '+part+'. These are catalog references, not verified fitment, prices or inventory.';
-  const list=document.createElement('div');list.className='offers';section.append(list);
-  for(const item of results.slice(0,50)){
-   const card=document.createElement('div');card.className='offer';
-   const title=document.createElement('strong');
-   title.textContent=[item.brandName||item.brand||item.supplierName||item.supplier?.name,item.articleNumber||item.articleNo||item.articleNumberFormatted||item.articleId||item.partNumber||part].filter(Boolean).join(' — ');
-   card.append(title);
-   const details=document.createElement('p');details.className='muted';
-   details.textContent=[item.genericArticleDescription||item.description||item.productName||item.articleName,item.articleId?'Catalog ID: '+item.articleId:''].filter(Boolean).join(' · ')||'Provider catalog record';
-   card.append(details);list.append(card);
+  for(const query of attempts){
+   const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),10000);
+   let response;
+   try{response=await fetch('/api/catalog/search?'+new URLSearchParams({partNumber:query}),{signal:ctrl.signal,headers:{Accept:'application/json'}})}
+   finally{clearTimeout(timer)}
+   if(!response.headers.get('content-type')?.includes('application/json'))throw Error('Catalog endpoint returned a non-JSON response');
+   const data=await response.json();
+   if(!response.ok){status.textContent='Catalog unavailable: '+(data.error||data.message||'HTTP '+response.status)+'.';return}
+   const payload=data.catalogResults||{};
+   const results=Array.isArray(payload.articles)?payload.articles:Array.isArray(payload.results)?payload.results:[];
+   for(const item of results){
+    if(!item||typeof item!=='object'||Array.isArray(item))continue;
+    const isExact=primaryNumbers(item).some(value=>normalizeNumber(value)===requested);
+    // A loose provider hit is a candidate only when it has a primary number
+    // that shares the searched numeric core. Unrelated search hits stay hidden.
+    const core=(requested.match(/[0-9]{4,}/)||[])[0]||requested;
+    const related=primaryNumbers(item).some(value=>normalizeNumber(value).includes(core));
+    if(isExact||related)add(item,isExact,query);
+   }
+   if(exact.length)break;
   }
-  if(results.length>50){const more=document.createElement('p');more.className='muted';more.textContent='Showing first 50 records.';section.append(more)}
+  status.textContent=exact.length+' exact match(es) and '+candidates.length+' unverified candidate(s) for '+part+'. Fitment, pricing and inventory are not verified.';
+  const show=(items,title)=>{
+   if(!items.length)return;
+   const h=document.createElement('h3');h.textContent=title;section.append(h);
+   const list=document.createElement('div');list.className='offers';section.append(list);
+   for(const {item,query} of items.slice(0,50)){
+    const card=document.createElement('div');card.className='offer';
+    const name=document.createElement('strong');
+    name.textContent=[item.brandName||item.brand||item.supplierName||item.supplier?.name,primaryNumbers(item)[0]||'Part number unavailable'].filter(Boolean).join(' — ');
+    card.append(name);
+    const detail=document.createElement('p');detail.className='muted';
+    detail.textContent=[item.genericArticleDescription||item.description||item.productName||item.articleName,'Search variant: '+query].filter(Boolean).join(' · ');
+    card.append(detail);list.append(card);
+   }
+  };
+  show(exact,'Exact manufacturer part-number matches — brand confirmation required');
+  show(candidates,'Unverified number-related results — not confirmed interchanges');
+  if(!exact.length&&!candidates.length){const note=document.createElement('p');note.className='muted';note.textContent='No records returned for the original number or its limited search variants. This does not establish that the part is invalid.';section.append(note)}
  }catch(e){status.textContent='Catalog lookup failed: '+(e.name==='AbortError'?'request timed out':'service unreachable')+'.'}
 }
 $('number-search').addEventListener('click',searchByNumber);
