@@ -23,8 +23,23 @@ export async function handleAutoParts(request,env){
     const target=new URL(health?"/api/languages/list":"/api/articles/search-by-article-no",base);
     if(articleNo){target.searchParams.set("articleNo",articleNo);target.searchParams.set("langId","4")}
     const upstream=await fetch(target.toString(),{headers:{"x-apiprofile-key":env.AUTOPARTS_API_KEY,"accept":"application/json"},signal:AbortSignal.timeout(12000)});
-    if(!upstream.ok)return {error:upstream.status};
-    try{return {data:await upstream.json()}}catch{return {invalid:true}}
+    // Temporary diagnostic: metadata only; never log credentials, URLs or raw records.
+    if(!upstream.ok){
+      console.log("PARTSHUB_CATALOG_DIAG",JSON.stringify({partNumber:articleNo||"health",upstreamStatus:upstream.status,success:false}));
+      return {error:upstream.status};
+    }
+    try{
+      const data=await upstream.json();
+      const shape=data&&typeof data==="object"&&!Array.isArray(data)?"object":Array.isArray(data)?"array":typeof data;
+      const keys=shape==="object"?Object.keys(data).slice(0,20):[];
+      const articleCount=Array.isArray(data?.articles)?data.articles.length:null;
+      const resultCount=Array.isArray(data?.results)?data.results.length:null;
+      console.log("PARTSHUB_CATALOG_DIAG",JSON.stringify({partNumber:articleNo||"health",upstreamStatus:upstream.status,success:true,shape,keys,articleCount,resultCount}));
+      return {data};
+    }catch{
+      console.log("PARTSHUB_CATALOG_DIAG",JSON.stringify({partNumber:articleNo||"health",upstreamStatus:upstream.status,success:false,invalidJson:true}));
+      return {invalid:true};
+    }
   };
   try{
     const first=await requestProvider(health?null:variants[0]);
